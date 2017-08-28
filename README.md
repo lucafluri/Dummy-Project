@@ -2,4 +2,4 @@
 
 Robotic Arm Project
 
-**Status: ** In Progress
+**Status:** In Progress
