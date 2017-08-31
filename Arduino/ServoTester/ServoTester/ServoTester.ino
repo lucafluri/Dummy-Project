@@ -76,7 +76,8 @@ void getAngles(){
   //Serial.println(f.readString());
 
   for(int i = 0; i < servoCount; i++){
-    pos[i] = f.parseInt();
+    int parse = f.parseInt();
+    pos[i] = parse;
     yield();
   }
   f.close();
@@ -717,6 +718,10 @@ void save(String file){
 void play(String file){
   File f = SPIFFS.open(file, "r");
   if(!f) Serial.println("file open failed!");
+  if(f.peek()==EOF){
+    Serial.println("Invalid or empty Preset");
+    return;
+  }
   //Serial.println(f.readString());
   int parsed;
   int buffer[servoCount];
@@ -731,7 +736,6 @@ void play(String file){
     }
     yield();
     for(int i = 0; i< servoCount; i++){
-
       setPos(i, buffer[i]);
     }
     waitAll();
@@ -754,9 +758,27 @@ void resetPos() {
   }
 }
 
+void resetArr(){
+  for(int i = 0; i< servoCount; i++){
+    pos[i] = defPos[i];
+  }
+}
+
+void checkArr(){
+  for(int i = 0; i< servoCount; i++){
+    if(pos[i]>180 || pos[i] < 1){
+      resetArr();
+      resetPos();
+      Serial.println("Corrected Pos Array and resetted");
+    }
+  }
+
+}
+
 void adjust() {
   Serial.println("Adjusting...");
   for(int i = 0; i< servoCount; i++){
+    checkArr();
     setPos(i, pos[i]);
   }
 }
@@ -801,6 +823,7 @@ void loop() {
   server.handleClient();
   ArduinoOTA.handle();
   timerUpdate();
+  checkArr();
 
 
 
