@@ -7,6 +7,7 @@
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
   <script src="js/scripts.js"></script>
+  <style>@import "css/styles.css";</style>
 
 </head>
 
@@ -21,37 +22,71 @@
         <tr>
           <td style="width:14.4px; text-align: right">0: </td>
           <td><input  id="servo0" type="range" min="1" max="180" step="1" value="1" onchange="servo0()"></td>
+          <td><div id="servo0val"></div></td>
         </tr>
         <tr>
           <td style="width:14.4px; text-align: right">1: </td>
           <td><input  id="servo1" type="range" min="1" max="180" step="1"  value="1" onchange="servo1()"></td>
+          <td><div id="servo1val"></div></td>
         </tr>
         <tr>
           <td style="width:14.4px; text-align: right">2: </td>
-          <td><input  id="servo2" type="range" min="1" max="180" step="1"  value="90" onchange="servo2()"></td>
+          <td><input  id="servo2" type="range" min="1" max="180" step="1"  value="95" onchange="servo2()"></td>
+          <td><div id="servo2val"></div></td>
+
         </tr>
         <tr>
           <td style="width:14.4px; text-align: right">3: </td>
           <td><input  id="servo3" type="range" min="1" max="180" step="1" value="65" onchange="servo3()"></td>
+          <td><div id="servo3val"></div></td>
         </tr>
         <tr>
           <td style="width:14.4px; text-align: right">4: </td>
           <td><input  id="servo4" type="range" min="1" max="180" step="1"  value="70" onchange="servo4()"></td>
+          <td><div id="servo4val"></div></td>
         </tr>
         <tr>
           <td style="width:14.4px; text-align: right">5: </td>
           <td><input  id="servo5" type="range" min="1" max="180" step="1"  value="1" onchange="servo5()"></td>
+          <td><div id="servo5val"></div></td>
+
         </tr>
         <tr>
-          <td><input  id="nod" type="button" value="Nod" onclick="nod()"</td>
+          <td><input  id="nod" type="button" value="Nod" onclick="nod()"></td>
         </tr>
         <tr>
-          <td><input  id="no" type="button" value="No" onclick="no()"</td>
+          <td><input  id="no" type="button" value="No" onclick="no()"></td>
         </tr>
         <tr>
-          <td><input  id="reset" type="button" value="RESET" onclick="reset()"</td>
+          <td><input  id="reset" type="button" value="RESET" onclick="reset()"></td>
+        </tr>
+        <tr>
+
+          <td>
+          <p>Preset 1: </p>
+          <input  id="save1" type="button" value="SAVE" onclick="send(this.id)">
+          <input  id="play1" type="button" value="PLAY" onclick="send(this.id)">
+          <input  id="clear1" type="button" value="CLEAR" onclick="send(this.id)">
+          </td>
+
+          <td>
+          <p>Preset 2: </p>
+          <input  id="save2" type="button" value="SAVE" onclick="send(this.id)">
+          <input  id="play2" type="button" value="PLAY" onclick="send(this.id)">
+          <input  id="clear2" type="button" value="CLEAR" onclick="send(this.id)">
+          </td>
+
+          <td>
+          <p>Preset 3: </p>
+          <input  id="save3" type="button" value="SAVE" onclick="send(this.id)">
+          <input  id="play3" type="button" value="PLAY" onclick="send(this.id)">
+          <input  id="clear3" type="button" value="CLEAR" onclick="send(this.id)">
+          </td>
+
         </tr>
       </table>
+    </div>
+    <div id="log">
     </div>
   </center>
 </body>
