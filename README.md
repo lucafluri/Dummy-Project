@@ -8,8 +8,8 @@ All current values from the servos are also stored locally, which is also allows
 **Status:** In Progress
 
 #### GIFS
-![Dummy Test 1](http://i.imgur.com/yWCVsk6.gifv)
-![Dummy Test 2](http://i.imgur.com/u3gIL13.gifv)
+![Dummy Test 1](http://i.imgur.com/yWCVsk6.gif)
+![Dummy Test 2](http://i.imgur.com/u3gIL13.gif)
 
 ### TODO
 - Better Speed Control via WiFi and Serial
