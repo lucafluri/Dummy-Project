@@ -7,9 +7,10 @@ All current values from the servos are also stored locally, which is also allows
 
 **Status:** In Progress
 
-#### GIFS
-![](http://i.imgur.com/yWCVsk6.gif)
-![](http://i.imgur.com/u3gIL13.gif)
+#### GIFS 
+Files may be too big to show  
+![Dummy Sequence Test 1](http://i.imgur.com/yWCVsk6.gif)  
+![Dummy Sequence Test 2 ](http://i.imgur.com/u3gIL13.gif)
 
 
 ### TODO
