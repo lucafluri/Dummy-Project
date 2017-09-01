@@ -10,6 +10,7 @@ All current values from the servos are also stored locally, which is also allows
 #### GIFS
 ![Dummy Test 1](http://i.imgur.com/yWCVsk6.gif)
 ![Dummy Test 2](http://i.imgur.com/u3gIL13.gif)
+<img src="http://i.imgur.com/yWCVsk6.gif" alt="DUUMMMY" height="400">
 
 ### TODO
 - Better Speed Control via WiFi and Serial
