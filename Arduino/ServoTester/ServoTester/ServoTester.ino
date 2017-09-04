@@ -91,7 +91,7 @@ Ticker t2;
 Ticker t3;
 Ticker t4;
 Ticker t5;
-Ticker saveTimer(saveAngles, 1000);
+Ticker timer(saveAngles, 1000);
 
 
 
@@ -128,7 +128,7 @@ void setup() {
 
   nod();
 
-  //test();
+  test();
 
   //no();
 
@@ -140,7 +140,7 @@ double MAP(double x, double in_min, double in_max, double out_min, double out_ma
 }
 
 //Converts pulse to angle
-int angle(double pulse, int servo = 0, int min = 100, int max = 600){
+int angle(double pulse, int servo = 0, int min = SERVOMIN, int max = SERVOMAX){
   if(servo<=3){
     return round(MAP(pulse, min, max, 0, 180));
   }
@@ -151,7 +151,7 @@ int angle(double pulse, int servo = 0, int min = 100, int max = 600){
 
 
 //Converts deg (0-180) to pulsewidth between min and max
-double pulse(int deg, int servo = 0, int min = 100, int max = 600){
+double pulse(int deg, int servo = 0, int min = SERVOMIN, int max = SERVOMAX){
   if(servo<=3){
     return round(MAP(deg, 0, 180, min, max));
   }
@@ -330,7 +330,31 @@ double servo5::diffAbs = 0;
 
 
 
+bool checkColl(int servo, int angle){
+  int diffmin = 95;     //Difference Servo 1 to Servo 2: 95°
+  int diffmax = 183;
 
+  switch(servo){
+    case 1:{
+      if((angle >= (diffmin - pos[2]-1) && angle <= diffmax - pos[2]) || (pos[1] < 20 && pos[2] <= 125)) return true;
+      else {
+        Serial.println("Collision Warning!");
+
+        return false;
+      }
+    }
+    case 2: { //TO DO COLLLIIISSSSIIIIOOON DETECTION!!!
+      //Difference to Servo 1: 94°
+      if((angle >= (diffmin - pos[1]-1) && angle <= diffmax - pos[1]) || (pos[1] < 20 && angle <= 125)) return true;
+      else {
+        Serial.println("Collision Warning!");
+
+        return false;
+      }
+    default: return true;
+    }
+  }
+}
 
 void setPosHard(int servo, int angle){
   pwm.setPWM(servo, 0, pulse(angle, servo));
@@ -350,6 +374,8 @@ bool setPos(int servo, int angle, int speed = 5, int minSteps=200){
     diffAbs = minSteps;
   }
 
+  //Serial.print(checkColl(servo, angle));
+
   yield();
  switch(servo){
    case 0: {  t0.stop();
@@ -363,7 +389,8 @@ bool setPos(int servo, int angle, int speed = 5, int minSteps=200){
               t0.start();
               return true;
            }
-   case 1: {  t1.stop();
+   case 1: {
+              t1.stop();
               servo1::i = 1;
               servo1::startPulse = startPulse;
               servo1::diff = diff;
@@ -374,7 +401,8 @@ bool setPos(int servo, int angle, int speed = 5, int minSteps=200){
               t1.start();
               return true;
            }
-   case 2: {  t2.stop();
+   case 2: {
+              t2.stop();
               servo2::i = 1;
               servo2::startPulse = startPulse;
               servo2::diff = diff;
@@ -423,20 +451,7 @@ bool setPos(int servo, int angle, int speed = 5, int minSteps=200){
 
   //pos[servo] = angle;
 
-/*
-  for(int i = 0; i <= diffAbs; i++){
-    double step = i/diffAbs;
-    double mult = exp(5*pow((step-1), 3));
-    int newPulse = round(mult * diff) + startPulse;
-    Serial.println(newPulse);
-    pwm.setPWM(servo, 0, newPulse);
-    yield();
-  }
-*/
-  //pwm.setPWM(servo, 0, pulse(angle, servo));
-
 }
-
 
 bool checkServo(int servo){
   switch(servo){
@@ -519,7 +534,6 @@ void startSPIFFS() { // Start the SPIFFS and list all contents
   }
 }
 
-
 void handleNotFound(){
   String message = "File Not Found\n\n";
   message += "URI: ";
@@ -535,8 +549,6 @@ void handleNotFound(){
   server.send(404, "text/plain", message);
 }
 
-
-
 String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
   if (bytes < 1024) {
     return String(bytes) + "B";
@@ -546,7 +558,6 @@ String formatBytes(size_t bytes) { // convert sizes in bytes to KB and MB
     return String(bytes / 1024.0 / 1024.0) + "MB";
   }
 }
-
 
 void startServer(){
   //WEBSERVER
@@ -560,32 +571,32 @@ void startServer(){
 
   server.on("/servo0", HTTP_POST, []() {
     String value = server.arg("value");
-    setPos(0, value.toInt());
+    if(checkColl(0, value.toInt())) setPos(0, value.toInt());
     Serial.println("Received Servo0 to " + value);
   });
   server.on("/servo1", HTTP_POST, []() {
     String value = server.arg("value");
-    setPos(1, value.toInt());
+    if(checkColl(1, value.toInt())) setPos(1, value.toInt());
     Serial.println("Received Servo1 to " + value);
   });
   server.on("/servo2", HTTP_POST, []() {
     String value = server.arg("value");
-    setPos(2, value.toInt());
+    if(checkColl(2, value.toInt())) setPos(2, value.toInt());
     Serial.println("Received Servo2 to " + value);
   });
   server.on("/servo3", HTTP_POST, []() {
     String value = server.arg("value");
-    setPos(3, value.toInt());
+    if(checkColl(3, value.toInt())) setPos(3, value.toInt());
     Serial.println("Received Servo3 to " + value);
   });
   server.on("/servo4", HTTP_POST, []() {
     String value = server.arg("value");
-    setPos(4, value.toInt());
+    if(checkColl(4, value.toInt())) setPos(4, value.toInt());
     Serial.println("Received Servo4 to " + value);
   });
   server.on("/servo5", HTTP_POST, []() {
     String value = server.arg("value");
-    setPos(5, value.toInt());
+    if(checkColl(5, value.toInt())) setPos(5, value.toInt());
     Serial.println("Received Servo5 to " + value);
   });
 
@@ -659,13 +670,10 @@ void startServer(){
 
 }
 
-
 void test(){
   //TESTS
-  Serial.print("pulse(70): ");
-  Serial.println(pulse(70, 4));
-  Serial.print("angle(pulse(70)): ");
-  Serial.println(angle(pulse(70, 4), 4));
+
+
 }
 
 void wait(int servo){
@@ -698,7 +706,6 @@ void no(){
   setPos(0, pos[0]-10, 5, 50);
   wait(0);
 }
-
 
 void save(String file){
   File f = SPIFFS.open(file, "a");
@@ -745,6 +752,7 @@ void play(String file){
   f.close();
 
 }
+
 void clear(String file){
   File f = SPIFFS.open(file, "w+");
   if(!f) Serial.println("file open failed!");
@@ -753,7 +761,7 @@ void clear(String file){
 
 void resetPos() {
   Serial.print("Resetting...");
-  for(int i = 0; i< servoCount; i++){
+  for(int i = servoCount; i >=0 ; i--){
     setPos(i, defPos[i]);
   }
 }
@@ -783,7 +791,6 @@ void adjust() {
   }
 }
 
-
 void checkInput(String input){
   if(input=="reset"){
     resetPos();
@@ -803,6 +810,10 @@ void checkInput(String input){
   // e.g. "5 145"
   else{
     servonum = input.substring(0, 1).toInt();
+    int angle = input.substring(2).toInt();
+
+    if(!checkColl(servonum, angle)) return;
+
     setPos(servonum, input.substring(2).toInt());
     Serial.println(input);
   }
@@ -815,7 +826,7 @@ void timerUpdate(){
   t3.update();
   t4.update();
   t5.update();
-  saveTimer.update();
+  timer.update();
   yield();
 }
 
