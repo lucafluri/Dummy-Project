@@ -83,3 +83,16 @@ input[type=range]:focus::-ms-fill-lower {
 input[type=range]:focus::-ms-fill-upper {
   background: #ffff0a;
 }
+
+
+
+table {
+    border-collapse: collapse;
+    width: 50%;
+}
+
+td {
+  padding: 2px;
+  text-align: center;
+
+}

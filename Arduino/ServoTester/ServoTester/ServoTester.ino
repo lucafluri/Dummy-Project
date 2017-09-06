@@ -12,10 +12,6 @@
 #include <math.h>
 #include <Ticker.h>
 
-//Gauss function for speedcontrol:  ( Bell Curve )
-// exp(-22*pow((x-0.5), 2))  (D: [0,1], W: [0,1])
-//Exp function BEETTTTEERR:
-// exp(5*pow((x-1), 3))
 
 // called this way, it uses the default address 0x40
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
@@ -28,6 +24,17 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 // have!
 #define SERVOMIN  100 // this is the 'minimum' pulse length count (out of 4096)
 #define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
+
+#define SERVOMIN4 150
+#define SERVOMAX4 500
+
+#define SERVOMIN5 140
+#define SERVOMAX5 586
+
+#define SERVOMIN6 173 //GRIPPER SLOT
+#define SERVOMAX6 294
+
+
 
 // our servo # counter
 uint8_t servonum = 0;
@@ -48,9 +55,11 @@ File fsUploadFile;
 //0: 1°   1: 1°   2: 90°
 //3: 65°  4: 70°  5: 1°
 //Angles for all servos
-int defPos[6] = {1, 1, 95, 65, 70, 1};
-int pos[6] = {1, 1, 95, 65, 70, 1};
-int servoCount = 6;
+int defPos[] = {1, 1, 95, 65, 70, 1, 1};
+int pos[] = {1, 1, 95, 65, 70, 1, 1};
+int servoCount = 7;
+int speedVal = 5; //Delay in ms
+int defSpeed = 5;
 
 String preset1 = "/js/teach1.dummy";
 String preset2 = "/js/teach2.dummy";
@@ -61,6 +70,12 @@ void saveAngles(){
   File f = SPIFFS.open("/js/angles.dummy", "w+");
   if(!f) Serial.println("file open failed!");
   Serial.println("Saving Angles to file...");
+  Serial.print("Angles: ");
+  for(int i = 0; i<servoCount; i++){
+    Serial.print(String(pos[i]) + " ");
+    yield();
+  }
+  Serial.println("");
 
   for(int i = 0; i<servoCount; i++){
     f.println(pos[i]);
@@ -91,13 +106,14 @@ Ticker t2;
 Ticker t3;
 Ticker t4;
 Ticker t5;
+Ticker t6;
 Ticker timer(saveAngles, 1000);
 
 
 
 void setup() {
   Serial.begin(9600);
-  Serial.setDebugOutput(true);
+  //Serial.setDebugOutput(true);
 
   pwm.begin();
 
@@ -119,6 +135,7 @@ void setup() {
   t3.stop();
   t4.stop();
   t5.stop();
+  t6.stop();
 
   //saveTimer.start();
 
@@ -142,21 +159,34 @@ double MAP(double x, double in_min, double in_max, double out_min, double out_ma
 //Converts pulse to angle
 int angle(double pulse, int servo = 0, int min = SERVOMIN, int max = SERVOMAX){
   if(servo<=3){
-    return round(MAP(pulse, min, max, 0, 180));
+    return round(MAP(pulse, min, max, 1, 180));
   }
-  else if(servo>=4){
-    return round(MAP(pulse, 150, 500, 0, 180));
+  else if(servo==4){
+    return round(MAP(pulse, SERVOMIN4, SERVOMAX4, 1, 180));
   }
+  else if(servo==5){
+    return round(MAP(pulse, SERVOMIN5, SERVOMAX5, 1, 180));
+  }
+  else if(servo==6){
+    return round(MAP(pulse, SERVOMIN6, SERVOMAX6, 1, 180));
+  }
+
 }
 
 
 //Converts deg (0-180) to pulsewidth between min and max
 double pulse(int deg, int servo = 0, int min = SERVOMIN, int max = SERVOMAX){
   if(servo<=3){
-    return round(MAP(deg, 0, 180, min, max));
+    return round(MAP(deg, 1, 180, min, max));
   }
-  else if(servo>=4){
-    return round(MAP(deg, 0, 180, 150, 500));
+  else if(servo==4){
+    return round(MAP(deg, 1, 180, SERVOMIN4, SERVOMAX4));
+  }
+  else if(servo==5){
+    return round(MAP(deg, 1, 180, SERVOMIN5, SERVOMAX5));
+  }
+  else if(servo==6){
+    return round(MAP(deg, 1, 180, SERVOMIN6, SERVOMAX6));
   }
 }
 
@@ -326,6 +356,32 @@ double servo5::startPulse = 0;
 double servo5::diff = 0;
 double servo5::diffAbs = 0;
 
+class servo6 {
+  public:
+    static const int servo = 6;
+    static int i;
+    static double startPulse, diff, diffAbs;
+
+    static void move(){
+      double step = i++/diffAbs;
+      double mult = curveMult(step);
+      int newPulse = round(mult * diff) + startPulse;
+      //Serial.println(newPulse);
+      pwm.setPWM(servo, 0, newPulse);
+      pos[servo] = angle(newPulse, servo);
+      if(i==diffAbs+1){
+        t5.stop();
+        saveAngles();
+      }
+
+      yield();
+    }
+};
+int servo6::i = 0;
+double servo6::startPulse = 0;
+double servo6::diff = 0;
+double servo6::diffAbs = 0;
+
 
 
 
@@ -336,7 +392,8 @@ bool checkColl(int servo, int angle){
 
   switch(servo){
     case 1:{
-      if((angle >= (diffmin - pos[2]-1) && angle <= diffmax - pos[2]) || (pos[1] < 20 && pos[2] <= 125)) return true;
+      if((angle < 20 && pos[2] > 125)) return false;
+      else if((angle >= (diffmin - pos[2]-1) && angle <= diffmax - pos[2])) return true;
       else {
         Serial.println("Collision Warning!");
 
@@ -345,7 +402,8 @@ bool checkColl(int servo, int angle){
     }
     case 2: { //TO DO COLLLIIISSSSIIIIOOON DETECTION!!!
       //Difference to Servo 1: 94°
-      if((angle >= (diffmin - pos[1]-1) && angle <= diffmax - pos[1]) || (pos[1] < 20 && angle <= 125)) return true;
+      if((pos[1] < 20 && angle > 125)) return false;
+      else if((angle >= (diffmin - pos[1]-1) && angle <= diffmax - pos[1])) return true; //Fix Servo 2 hitting board
       else {
         Serial.println("Collision Warning!");
 
@@ -354,6 +412,7 @@ bool checkColl(int servo, int angle){
     default: return true;
     }
   }
+  yield();
 }
 
 void setPosHard(int servo, int angle){
@@ -362,7 +421,7 @@ void setPosHard(int servo, int angle){
 
 }
 
-bool setPos(int servo, int angle, int speed = 5, int minSteps=200){
+bool setPos(int servo, int angle, int speed = speedVal, int minSteps=200){
   double startPulse = pulse(pos[servo], servo);
   double diff = pulse(angle, servo)-startPulse;
   double diffAbs = abs(diff);
@@ -446,6 +505,17 @@ bool setPos(int servo, int angle, int speed = 5, int minSteps=200){
               t5.start();
               return true;
            }
+   case 6: {  t6.stop();
+              servo6::i = 1;
+              servo6::startPulse = startPulse;
+              servo6::diff = diff;
+              servo6::diffAbs = diffAbs;
+              t6.setCallback(servo6::move);
+              t6.setInterval(speed);
+              t6.setRepeats(diffAbs);
+              t6.start();
+              return true;
+           }
   }
 
 
@@ -472,6 +542,9 @@ bool checkServo(int servo){
       else return true;
     case 5:
       if(t5.getState()==1) return false;
+      else return true;
+    case 6:
+      if(t6.getState()==1) return false;
       else return true;
 
   }
@@ -567,7 +640,11 @@ void startServer(){
   server.serveStatic("/css", SPIFFS, "/css", "max-age=86400");
   server.serveStatic("/images", SPIFFS, "/images", "max-age=86400");
   server.serveStatic("/", SPIFFS, "/index.html");
-  server.serveStatic("/angles", SPIFFS, "/angles.dummy");
+  server.serveStatic("/angles", SPIFFS, "/js/angles.dummy", "max-age=86400");
+  server.serveStatic("/teach1", SPIFFS, "/js/teach1.dummy", "max-age=86400");
+  server.serveStatic("/teach2", SPIFFS, "/js/teach2.dummy", "max-age=86400");
+  server.serveStatic("/teach3", SPIFFS, "/js/teach3.dummy", "max-age=86400");
+
 
   server.on("/servo0", HTTP_POST, []() {
     String value = server.arg("value");
@@ -599,6 +676,18 @@ void startServer(){
     if(checkColl(5, value.toInt())) setPos(5, value.toInt());
     Serial.println("Received Servo5 to " + value);
   });
+  server.on("/servo6", HTTP_POST, []() {
+    String value = server.arg("value");
+    setPos(6, value.toInt());
+    Serial.println("Received Servo6 to " + value);
+  });
+
+
+  server.on("/speed", HTTP_POST, []() {
+    String value = server.arg("value");
+    speedVal = value.toInt();
+    Serial.println("Set Speed to " + value);
+  });
 
 
 
@@ -606,6 +695,10 @@ void startServer(){
   server.on("/reset", HTTP_POST, []() {
     resetPos();
     Serial.println("Received reset");
+  });
+  server.on("/resetSpeed", HTTP_POST, []() {
+    resetSpeed();
+    Serial.println("Received reset Speed");
   });
   server.on("/nod", HTTP_POST, []() {
     nod();
@@ -761,9 +854,16 @@ void clear(String file){
 
 void resetPos() {
   Serial.print("Resetting...");
-  for(int i = servoCount; i >=0 ; i--){
+  for(int i = 0; i < servoCount ; i++){
     setPos(i, defPos[i]);
   }
+
+}
+
+void resetSpeed(){
+  Serial.print("Resetting Speed...");
+
+  speedVal = defSpeed;
 }
 
 void resetArr(){
@@ -796,6 +896,11 @@ void checkInput(String input){
     resetPos();
     Serial.println(input);
   }
+  else if(input=="resetSpeed"){
+    resetSpeed();
+    Serial.println(input);
+  }
+
   else if(input=="nod"){
     nod();
     Serial.println("Nodding...");
@@ -806,6 +911,19 @@ void checkInput(String input){
   }
   else if(input.substring(0, 3)=="get"){
     Serial.println(pos[input.substring(4).toInt()]);
+  }
+  else if(input=="save1") save(preset1);
+  else if(input=="save2") save(preset2);
+  else if(input=="save3") save(preset3);
+  else if(input=="play1") play(preset1);
+  else if(input=="play2") play(preset2);
+  else if(input=="play3") play(preset3);
+  else if(input=="clear1") clear(preset1);
+  else if(input=="clear2") clear(preset2);
+  else if(input=="clear3") clear(preset3);
+
+  else if(input.substring(0, 5)=="speed"){
+    speedVal = input.substring(6).toInt();
   }
   // e.g. "5 145"
   else{
@@ -826,6 +944,7 @@ void timerUpdate(){
   t3.update();
   t4.update();
   t5.update();
+  t6.update();
   timer.update();
   yield();
 }

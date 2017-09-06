@@ -20,35 +20,41 @@
     <div>
       <table>
         <tr>
-          <td style="width:14.4px; text-align: right">0: </td>
+          <td style="text-align: right">0: </td>
           <td><input  id="servo0" type="range" min="1" max="180" step="1" value="1" onchange="servo0()"></td>
-          <td><div id="servo0val"></div></td>
+          <td><div id="servo0val" style="text-align: left"></div></td>
         </tr>
         <tr>
-          <td style="width:14.4px; text-align: right">1: </td>
+          <td style="text-align: right">1: </td>
           <td><input  id="servo1" type="range" min="1" max="180" step="1"  value="1" onchange="servo1()"></td>
-          <td><div id="servo1val"></div></td>
+          <td><div id="servo1val" style="text-align: left"></div></td>
         </tr>
         <tr>
-          <td style="width:14.4px; text-align: right">2: </td>
+          <td style="text-align: right">2: </td>
           <td><input  id="servo2" type="range" min="1" max="180" step="1"  value="95" onchange="servo2()"></td>
-          <td><div id="servo2val"></div></td>
+          <td><div id="servo2val" style="text-align: left"></div></td>
 
         </tr>
         <tr>
-          <td style="width:14.4px; text-align: right">3: </td>
+          <td style="text-align: right">3: </td>
           <td><input  id="servo3" type="range" min="1" max="180" step="1" value="65" onchange="servo3()"></td>
-          <td><div id="servo3val"></div></td>
+          <td><div id="servo3val" style="text-align: left"></div></td>
         </tr>
         <tr>
-          <td style="width:14.4px; text-align: right">4: </td>
+          <td style="text-align: right">4: </td>
           <td><input  id="servo4" type="range" min="1" max="180" step="1"  value="70" onchange="servo4()"></td>
-          <td><div id="servo4val"></div></td>
+          <td><div id="servo4val" style="text-align: left"></div></td>
         </tr>
         <tr>
-          <td style="width:14.4px; text-align: right">5: </td>
+          <td style="text-align: right">5: </td>
           <td><input  id="servo5" type="range" min="1" max="180" step="1"  value="1" onchange="servo5()"></td>
-          <td><div id="servo5val"></div></td>
+          <td><div id="servo5val" style="text-align: left"></div></td>
+
+        </tr>
+        <tr>
+          <td style="text-align: right">Gripper: </td>
+          <td><input  id="servo6" type="range" min="1" max="180" step="1"  value="1" onchange="servo6()"></td>
+          <td><div id="servo6val" style="text-align: left"></div></td>
 
         </tr>
         <tr>
@@ -60,6 +66,16 @@
         <tr>
           <td><input  id="reset" type="button" value="RESET" onclick="reset()"></td>
         </tr>
+        <tr>
+          <td style="text-align: right">Speed (Delay in ms): </td>
+          <td><input  id="speed" type="range" min="1" max="15" step="1"  value="5" onchange="speed()"></td>
+          <td><div id="speedval" style="text-align: left"></div></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><input  id="resetSpeed" type="button" value="RESET SPEED" onclick="resetSpeed()"></td>
+        </tr>
+
         <tr>
 
           <td>

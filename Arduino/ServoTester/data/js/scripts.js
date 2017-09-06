@@ -10,8 +10,9 @@ $(document).ready( function() {
 
 });
 
-var angles = [1, 1, 95, 65, 70, 1];
-var buffer = [1, 1, 95, 65, 70, 1];
+var angles = [1, 1, 95, 65, 70, 1, 1];
+var buffer = [1, 1, 95, 65, 70, 1, 1];
+var speedVal = 5; //default: 5ms
 sync();
 
 function send(data){
@@ -62,6 +63,7 @@ function displayAngles(){
     $("#servo3").val(angles[3].toString());
     $("#servo4").val(angles[4].toString());
     $("#servo5").val(angles[5].toString());
+    $("#servo6").val(angles[6].toString());
     displayText("Adjusting...");
     readAngles();
 
@@ -87,6 +89,9 @@ function updateDeg(){
   $("#servo3val").text($("#servo3").val());
   $("#servo4val").text($("#servo4").val());
   $("#servo5val").text($("#servo5").val());
+  $("#servo6val").text($("#servo6").val());
+
+  $("#speedval").text($("#speed").val());
 }
 
 function servo0(){
@@ -113,6 +118,16 @@ function servo5(){
   $.post(urlBase + "servo5?value=" + $("#servo5").val());
   buffer[5] = $("#servo5").val();
 }
+function servo6(){
+  $.post(urlBase + "servo6?value=" + $("#servo6").val());
+  buffer[6] = $("#servo6").val();
+}
+
+function speed(){
+  $.post(urlBase + "speed?value=" + $("#speed").val());
+  speedVal = $("#speed").val();
+}
+
 
 
 
@@ -130,5 +145,10 @@ function reset(){
   $("#servo3").val("65");
   $("#servo4").val("70");
   $("#servo5").val("1");
+  $("#servo6").val("1");
+}
 
+function resetSpeed(){
+  $("#speed").val("5");
+  $.post(urlBase + "resetSpeed");
 }
