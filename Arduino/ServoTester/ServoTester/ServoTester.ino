@@ -65,22 +65,26 @@ String preset1 = "/js/teach1.dummy";
 String preset2 = "/js/teach2.dummy";
 String preset3 = "/js/teach3.dummy";
 
+void printPos(){
+  String ang = "";
+  for(int i = 0; i<servoCount; i++){
+    ang += String(pos[i]) + " ";
+    yield();
+  }
+  Serial.println("Pos: " + ang);
+}
 
 void saveAngles(){
   File f = SPIFFS.open("/js/angles.dummy", "w+");
   if(!f) Serial.println("file open failed!");
   Serial.println("Saving Angles to file...");
-  Serial.print("Angles: ");
-  for(int i = 0; i<servoCount; i++){
-    Serial.print(String(pos[i]) + " ");
-    yield();
-  }
-  Serial.println("");
+
 
   for(int i = 0; i<servoCount; i++){
     f.println(pos[i]);
     yield();
   }
+  printPos();
   f.close();
 }
 
@@ -158,6 +162,7 @@ double MAP(double x, double in_min, double in_max, double out_min, double out_ma
 
 //Converts pulse to angle
 int angle(double pulse, int servo = 0, int min = SERVOMIN, int max = SERVOMAX){
+
   if(servo<=3){
     return round(MAP(pulse, min, max, 1, 180));
   }
@@ -685,8 +690,8 @@ void startServer(){
 
   server.on("/speed", HTTP_POST, []() {
     String value = server.arg("value");
-    speedVal = value.toInt();
-    Serial.println("Set Speed to " + value);
+    setSpeed(value.toInt());
+
   });
 
 
@@ -850,6 +855,7 @@ void clear(String file){
   File f = SPIFFS.open(file, "w+");
   if(!f) Serial.println("file open failed!");
   f.close();
+  Serial.println("Cleared!");
 }
 
 void resetPos() {
@@ -860,16 +866,22 @@ void resetPos() {
 
 }
 
-void resetSpeed(){
-  Serial.print("Resetting Speed...");
+void setSpeed(int speed){
+  speedVal = speed;
+  Serial.println("Speed: " + String(speedVal));
 
-  speedVal = defSpeed;
+}
+
+void resetSpeed(){
+  Serial.println("Resetting Speed...");
+  setSpeed(defSpeed);
 }
 
 void resetArr(){
   for(int i = 0; i< servoCount; i++){
     pos[i] = defPos[i];
   }
+  Serial.println("Resetted Pos[]");
 }
 
 void checkArr(){
@@ -877,7 +889,7 @@ void checkArr(){
     if(pos[i]>180 || pos[i] < 1){
       resetArr();
       resetPos();
-      Serial.println("Corrected Pos Array and resetted");
+      //Serial.println("Corrected Pos Array and resetted");
     }
   }
 
@@ -888,6 +900,7 @@ void adjust() {
   for(int i = 0; i< servoCount; i++){
     checkArr();
     setPos(i, pos[i]);
+    setSpeed(speedVal);
   }
 }
 
@@ -898,7 +911,7 @@ void checkInput(String input){
   }
   else if(input=="resetSpeed"){
     resetSpeed();
-    Serial.println(input);
+    //Serial.println(input);
   }
 
   else if(input=="nod"){
@@ -923,16 +936,21 @@ void checkInput(String input){
   else if(input=="clear3") clear(preset3);
 
   else if(input.substring(0, 5)=="speed"){
-    speedVal = input.substring(6).toInt();
+    setSpeed(input.substring(6).toInt());
+
   }
   // e.g. "5 145"
-  else{
+  else if(input.length()<=5){
+
     servonum = input.substring(0, 1).toInt();
     int angle = input.substring(2).toInt();
 
     if(!checkColl(servonum, angle)) return;
 
     setPos(servonum, input.substring(2).toInt());
+
+  }
+  else{
     Serial.println(input);
   }
 }
