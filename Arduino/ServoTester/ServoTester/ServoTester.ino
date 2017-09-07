@@ -60,6 +60,7 @@ int pos[] = {1, 1, 95, 65, 70, 1, 1};
 int servoCount = 7;
 int speedVal = 5; //Delay in ms
 int defSpeed = 5;
+int mil = 20; //Repeat delay for handtracking
 
 String preset1 = "/js/teach1.dummy";
 String preset2 = "/js/teach2.dummy";
@@ -111,7 +112,8 @@ Ticker t3;
 Ticker t4;
 Ticker t5;
 Ticker t6;
-Ticker timer(saveAngles, 1000);
+Ticker timer1;
+Ticker timer2;
 
 
 
@@ -421,8 +423,11 @@ bool checkColl(int servo, int angle){
 }
 
 void setPosHard(int servo, int angle){
-  pwm.setPWM(servo, 0, pulse(angle, servo));
-  pos[servo] = angle;
+  if(angle<=180 && angle>=1){
+    pwm.setPWM(servo, 0, pulse(angle, servo));
+    pos[servo] = angle;
+    //saveAngles();
+  }
 
 }
 
@@ -864,6 +869,7 @@ void resetPos() {
     setPos(i, defPos[i]);
   }
 
+
 }
 
 void setSpeed(int speed){
@@ -889,6 +895,8 @@ void checkArr(){
     if(pos[i]>180 || pos[i] < 1){
       resetArr();
       resetPos();
+      timer1.stop();
+      timer2.stop();
       //Serial.println("Corrected Pos Array and resetted");
     }
   }
@@ -902,6 +910,66 @@ void adjust() {
     setPos(i, pos[i]);
     setSpeed(speedVal);
   }
+}
+
+void left(){
+  setPosHard(0, pos[0]-1);
+}
+
+void right(){
+  setPosHard(0, pos[0]+1);
+}
+
+void up(){
+  setPosHard(4, pos[4]+1);
+}
+
+void down(){
+  setPosHard(4, pos[4]-1);
+}
+
+void turn(String dir){
+
+  if(dir=="l"){
+    timer1.pause();
+    timer1.setCallback(left);
+    timer1.setInterval(mil);
+    timer1.start();
+    Serial.println("Received l");
+  }
+  else if(dir=="r"){
+    timer1.pause();
+    timer1.setCallback(right);
+    timer1.setInterval(mil);
+    timer1.start();
+    Serial.println("Received r");
+  }
+  else if(dir=="u"){
+    timer2.pause();
+    timer2.setCallback(up);
+    timer2.setInterval(mil);
+    timer2.start();
+    Serial.println("Received u");
+  }
+  else if(dir=="d"){
+    timer2.pause();
+    timer2.setCallback(down);
+    timer2.setInterval(mil);
+    timer2.start();
+    Serial.println("Received d");
+  }
+  else if(dir=="S1"){
+    timer1.stop();
+    saveAngles();
+    Serial.println("Received S1");
+  }
+  else if(dir=="S2"){
+    timer2.stop();
+    saveAngles();
+    Serial.println("Received S2");
+  }
+
+
 }
 
 void checkInput(String input){
@@ -935,6 +1003,31 @@ void checkInput(String input){
   else if(input=="clear2") clear(preset2);
   else if(input=="clear3") clear(preset3);
 
+  else if(input.substring(0, 1)=="l"){
+    turn("l");
+    if(input.length()>1 && input.substring(1, 2)=="u") turn("u");
+    else if(input.length()>1 && input.substring(1, 2)=="d") turn("d");
+  }
+  else if(input.substring(0, 1)=="r" && input!="reset"){
+    turn("r");
+    if(input.length()>1 && input.substring(1, 2)=="u") turn("u");
+    else if(input.length()>1 && input.substring(1, 2)=="d") turn("d");
+  }
+  else if(input.substring(0, 1)=="u"){
+    turn("u");
+  }
+  else if(input.substring(0, 1)=="d"){
+    turn("d");
+  }
+  else if(input.substring(0, 2)=="S1"){
+    turn("S1");
+    if(input.length()>2 && input.substring(2, 4)=="S2") turn("S2");
+  }
+  else if(input.substring(0, 2)=="S2"){
+    turn("S2");
+  }
+
+
   else if(input.substring(0, 5)=="speed"){
     setSpeed(input.substring(6).toInt());
 
@@ -963,7 +1056,8 @@ void timerUpdate(){
   t4.update();
   t5.update();
   t6.update();
-  timer.update();
+  timer1.update();
+  timer2.update();
   yield();
 }
 

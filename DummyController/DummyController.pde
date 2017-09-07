@@ -24,6 +24,12 @@ int speed = 5;
 String curr = " ";
 String port = "/dev/ttyUSB0";
 
+int t = 0;
+
+boolean right = false;
+boolean left = false;
+boolean up = false;
+boolean down = false;
 
 void setup() {
   size(700, 700);
@@ -31,12 +37,13 @@ void setup() {
 
  
   opencv = new OpenCV(this, 300, 150);
-  opencv.loadCascade(OpenCV.CASCADE_FRONTALFACE); 
+  opencv.loadCascade(OpenCV.CASCADE_FRONTALFACE);
   //opencv.setROI(20, 500, 300, 150);
   
   
   try{
     serial = new Serial(this, port, 9600);
+    serial.bufferUntil(10);
     leap = new LeapMotion(this).allowGestures();
     
   }finally{}
@@ -248,6 +255,12 @@ void draw() {
   
   //leapImages();
   opencvFace();
+  
+  if(millis()>t){
+    t = millis() + 250;
+    trackHand();
+  }
+  //trackHand();
 
 }
 
@@ -268,14 +281,14 @@ void opencvFace(){
   }
   
   //BRIGHT SPOT DETECTION
-  
+  /*
   PVector loc = opencv.max();
   
   stroke(255, 0, 0);
   strokeWeight(4);
   noFill();
   ellipse(loc.x+20, loc.y+500, 5, 5);
-
+*/
   
   //FACE DETECTION
   faces = opencv.detect();
@@ -305,6 +318,81 @@ void leapImages(){
   }
 }
 
+void trackHand(){
+ 
+ for(Hand hand : leap.getHands()){
+   PVector handPosition       = hand.getPosition();
+   float   handGrab           = hand.getGrabStrength();
+   if(hand.isRight()){
+     float x = handPosition.x;
+     float y = handPosition.y;
+     float z = handPosition.z;
+     if(handGrab == 1.0){
+       print("Grabbed");
+       if(right || left){
+         send("S1");
+       }
+       right = false;
+       left = false;
+       
+       if(up || down){
+       send("S2");
+       }
+       up = false;
+       down = false;
+     }
+     else{ //Only print while hand not fully grabbed
+       println("X: " + x);
+       println("Z: " + z);
+       
+       if(x>400.0){
+         println("Hand right");
+         if(!right){
+           send("r");
+           right = true;
+           left = false;
+         }
+       }
+       else if(x<300.0){
+         println("Hand left");
+         if(!left){
+           send("l");
+           left = true;
+           right = false;
+         }
+       }
+       else{
+         if(right || left) send("S1");
+         right = false;
+         left = false;
+       }
+       
+       if(z>60.0){
+         println("Hand up");
+         if(!up){
+           send("u");
+           up = true;
+           down = false;
+         }
+       }
+       else if(z<40.0){
+         println("Hand down");
+         if(!down){
+           send("d");
+           down = true;
+           up = false;
+         }
+       }
+       else{
+        if(up || down) send("S2");
+        up = false;
+        down = false;
+       }
+     }
+   }
+ }
+}
+
 // ======================================================
 // 1. Swipe Gesture
 
@@ -325,7 +413,7 @@ void leapOnSwipeGesture(SwipeGesture g, int state){
       break;
     case 3: // Stop
       println("SwipeGesture: " + id);
-      send("reset");
+      //send("reset");
       break;
   }
 }
@@ -391,22 +479,24 @@ void leapOnKeyTapGesture(KeyTapGesture g){
 
   println("KeyTapGesture: " + id);
   send("nod");
+  print("Position: " + position);
 }
 
 void getAngles(String array) {
   String buffer[] = array.split(" ");
-  for (int i = 0; i < servoCount; i++) {
-    pos[i] = Integer.parseInt(buffer[i]);
-    
-  }
-  for (int i = 0; i < servoCount; i++) {
-    if(pos[i] != (int) cp5.get("Servo" + i).getValue()){
-      setSliders();
-      break;
+  try{
+    for (int i = 0; i < servoCount; i++) {
+      try{pos[i] = Integer.parseInt(buffer[i]);}finally{}
+      
     }
-    
-  }
- 
+    for (int i = 0; i < servoCount; i++) {
+      if(pos[i] != (int) cp5.get("Servo" + i).getValue()){
+        setSliders();
+        break;
+      }
+      
+    }
+  }finally{}
   
 }
 
@@ -499,6 +589,7 @@ void mouseReleased(){
   int value = (int) cp5.get("Speed").getValue();
   if(value != speed && checkMouseOver("Speed")) send("speed " + value);
 }
+
 
 
 public void send(String text) {
