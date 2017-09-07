@@ -7,15 +7,15 @@ All current values from the servos are also stored locally, which is also allows
 
 **Status:** In Progress
 
-#### GIFS 
+#### GIFS
 Files may be too big to show  
 http://i.imgur.com/yWCVsk6.gif  
 http://i.imgur.com/u3gIL13.gif
 
 
 ### TODO
-- Better Speed Control via WiFi and Serial
-- Easy Input System
+- ~~Better Speed Control via WiFi and Serial~~
+- ~~Easy Input System~~
 - Coordinate System
 - Inverse Kinematics
-- Leap Integration
+- ~~Leap Integration (via processing)~~
