@@ -256,10 +256,10 @@ void draw() {
   //leapImages();
   opencvFace();
   
-  if(millis()>t){
+  /*if(millis()>t){
     t = millis() + 250;
     trackHand();
-  }
+  }*/
   //trackHand();
 
 }
