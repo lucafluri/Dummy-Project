@@ -11,7 +11,9 @@
 #include <ArduinoOTA.h>
 #include <math.h>
 #include <Ticker.h>
-
+#include <WebSocketsClient.h>
+#include <Hash.h>
+WebSocketsClient webSocket;
 
 // called this way, it uses the default address 0x40
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
@@ -115,11 +117,54 @@ Ticker t6;
 Ticker timer1;
 Ticker timer2;
 
+void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
+	switch(type) {
+		case WStype_DISCONNECTED:
+			Serial.printf("[WSc] Disconnected!\n");
+			break;
+		case WStype_CONNECTED: {
+			Serial.printf("[WSc] Connected to url: %s\n", payload);
+      Serial.println("[WSc] Connected!");
+
+			// send message to server when Connected
+			webSocket.sendTXT("Connected");
+		}
+			break;
+		case WStype_TEXT:
+			Serial.printf("[WSc] get text: %s\n", payload);
+
+			// send message to server
+			// webSocket.sendTXT("message here");
+			break;
+		case WStype_BIN:
+			Serial.printf("[WSc] get binary length: %u\n", length);
+			hexdump(payload, length);
+
+			// send data to server
+			// webSocket.sendBIN(payload, length);
+			break;
+	}
+
+}
+
+void connectWS(){
+  // server address, port and URL
+	webSocket.begin("ws://localhost:6437/", 6437, "");
+
+	// event handler
+	webSocket.onEvent(webSocketEvent);
+
+	// use HTTP Basic Authorization this is optional remove if not needed
+	//webSocket.setAuthorization("user", "Password");
+
+	// try ever 5000 again if connection has failed
+	webSocket.setReconnectInterval(5000);
+}
 
 void setup() {
   Serial.begin(9600);
-  //Serial.setDebugOutput(true);
+  Serial.setDebugOutput(true);
 
   pwm.begin();
 
@@ -133,6 +178,7 @@ void setup() {
   startOTA();
   startSPIFFS();               // Start the SPIFFS and list all contents
   startServer();
+  connectWS();
 
 
   t0.stop();
@@ -1064,6 +1110,7 @@ void timerUpdate(){
 void loop() {
   server.handleClient();
   ArduinoOTA.handle();
+  webSocket.loop();
   timerUpdate();
   checkArr();
 
