@@ -8,9 +8,11 @@ All current values from the servos are also stored locally, which is also allows
 **Status:** In Progress
 
 #### GIFS
-Files may be too big to show  
 http://i.imgur.com/yWCVsk6.gif  
-http://i.imgur.com/u3gIL13.gif
+http://i.imgur.com/u3gIL13.gif  
+
+With LeapMotion:  
+https://i.imgur.com/z4CV3fg.gif
 
 
 ### TODO
